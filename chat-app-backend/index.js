@@ -1,37 +1,25 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path');
 const mysql = require('mysql2');
 const config = require('./config'); // Import cấu hình từ file config.js
+
 const app = express();
 
-// Cấu hình kết nối MySQL từ config
-const connection = mysql.createConnection({
-    host: config.db.host,
-    user: config.db.user,
-    password: config.db.password,
-    database: config.db.database,
-    port: 3306 // Cổng mặc định của MySQL
-});
-
-// Kết nối tới cơ sở dữ liệu
-connection.connect((err) => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err.message);
-        return;
-    }
-    console.log('Connected to MySQL database');
-});
+// Cấu hình pool kết nối MySQL từ config
+const pool = mysql.createPool(config.db);
 
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // Routes
 const authRoutes = require('./routes/auth');
-const messageRoutes = require('./routes/messages');
+const eventRoutes = require('./routes/events');
 app.use('/api/auth', authRoutes);
-app.use('/api/messages', messageRoutes);
+app.use('/api/events', eventRoutes);
 
 // Khởi động server
 app.listen(config.server.port, () => {

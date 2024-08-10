@@ -3,21 +3,24 @@ const router = express.Router();
 const mysql = require('mysql2');
 const config = require('../config');
 
-const connection = mysql.createConnection(config.db);
+// Tạo pool kết nối
+const pool = mysql.createPool(config.db);
 
+// Đăng ký người dùng
 router.post('/register', (req, res) => {
     const { username, password } = req.body;
-    connection.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err, results) => {
-        if (err) return res.status(500).send('Error on the server.');
-        res.status(200).send('User registered successfully.');
+    pool.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err, results) => {
+        if (err) return res.status(500).send('Lỗi trên máy chủ.');
+        res.status(200).send('Người dùng đã được đăng ký thành công.');
     });
 });
 
+// Đăng nhập người dùng
 router.post('/login', (req, res) => {
     const { username, password } = req.body;
-    connection.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, results) => {
-        if (err) return res.status(500).send('Error on the server.');
-        if (results.length === 0) return res.status(404).send('No user found or incorrect password.');
+    pool.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, results) => {
+        if (err) return res.status(500).send('Lỗi trên máy chủ.');
+        if (results.length === 0) return res.status(404).send('Không tìm thấy người dùng hoặc mật khẩu không chính xác.');
 
         const user = results[0];
         res.status(200).send({ auth: true, user });
