@@ -27,12 +27,24 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Endpoint để upload tệp
-router.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('Không có tệp nào được tải lên.');
+// Endpoint để upload ảnh bằng Base64
+router.post('/uploadBase64', (req, res) => {
+    const base64Data = req.body.image;
+
+    if (!base64Data) {
+        return res.status(400).send('Không có dữ liệu ảnh được gửi.');
     }
-    res.status(200).json(req.file);
+
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filePath = path.join(uploadDir, `uploaded_image_${Date.now()}.jpg`);
+
+    fs.writeFile(filePath, buffer, (err) => {
+        if (err) {
+            console.error('Lỗi khi lưu ảnh:', err);
+            return res.status(500).send('Lỗi khi lưu ảnh.');
+        }
+        res.status(200).json({ path: `/images/${path.basename(filePath)}` });
+    });
 });
 
 // Thêm sự kiện mới
